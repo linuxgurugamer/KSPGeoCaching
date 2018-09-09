@@ -1,0 +1,87 @@
+0.0.1.12
+	Added option to use percentage of atmosphere depth to determine disableAtAltitudeKm and ignoreAoAAboveAltitudeKm
+	Added reset to settings, based on whether the percentage is used or not
+
+0.0.1.11
+	Updated .version file (Name was wrong)
+
+0.0.1.10
+	Fixed the settings not being passed to the flight scene from the editor
+
+0.0.1.9
+	Fixed nullref which was causing an empty popup when toolbar buttons were disabled and the window was opened using the PAW menu
+	Fixed resetting to default values for the following:
+		ignoreAoAAboveAltitudeKm
+		disableAtAltitudeKm 
+	Fixed default values not being set properly upon first run in Flight mode
+	Fixed default values not being set properly upon first run in Editor mode
+	Moved ResetToDefault() method into the AbortValues class to simplify code a bit
+
+0.0.1.8
+	Added parameter to ignore AoA above specified altitude
+
+0.0.1.7
+	Fixed issue with explosions being detected on the launchpad before launching
+	Added dependency checking
+
+0.0.1.6
+	Fixed constant message of Abort Sequence Canceled
+
+0.0.1.5
+	Fixed bug with decoupling and undocking.  After decouple or undock, new vessel had a mission time of 0, thereby sometimes reactiving the mod in deep space
+	Changed min version to be 1.4.3
+
+0.0.1.4
+	Cleaned up the on-screen messages a bit
+	Added button flashing when abort is active on active vessel
+		Click the button to acknowledge the abort, button will stay red
+		Click a second time to cancel the post-abort sequence, button will go back to normal
+	Changed disableAtAltitude to disableAtAltitudeKm
+	Added new disableAtAltitude, always set to 1000 * disableAtAltitudeKm, to avoid doing multiplication during flight
+	Added check for changed data, if no data changed in window, Apply button is now disabled
+	Added button to window in flight to Acknowledge and Disable  abort, for when an abort happens
+	Abort sequence now disables if no control source
+
+0.0.1.3
+	Changed messages to reflect where the abort was.  If on active vessel, will be in red, otherwise will be in yellow
+	Reformatted messages to fix on single lines
+
+0.0.1.2
+	Fixed nullref coming from the explosion detector,caused when no vessel
+	Added check to the explosion detector to be sure flight is ready.  KSP seems to do an extra OnDestroy when
+		launching vessels with certain parts (Stockalike Station parts Expansion Redux, the replacement for the 
+		stock docking port)
+
+0.0.1.1
+	Fixed bug where reverts would detect explosions
+	Fixed bug where explosions in other vessels would trigger abort in the wrong vessel
+	Changed BPB_Flight to be part of the BPB_VesselModule
+
+0.0.1
+	First full release
+	Fixed bug where changing the Active flag in flight didn't do anything
+	Added disableAtAltitude setting
+
+0.0.0.3
+	Added some tooltips to the settings window
+	Added check for PAW button to be enabled or disabled according to the options
+	Updated text for the PAW button option
+
+0.0.0.2
+	In settings page, allowChangeInFlight was not yet implemented
+	Added scene name to window
+	Added code to detect if mission time is too great when first switching to a vessel
+	Flipped Postabort lines in dialog, for consistency
+	Added Apply button when in flight
+	Implemented changing values in flight
+	Added max G for timeout action
+	Updated text for timeout in settings and in dialog window
+
+0.0.0.1
+	Added option to not use KSP skin
+	Fixed  explosions being caught from the non-active ship
+	Changed seconds timers from float to int
+	Added entry field for seconds timers for more precise entry
+
+0.0.0
+	Initial beta
