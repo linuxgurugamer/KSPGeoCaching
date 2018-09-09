@@ -9,12 +9,12 @@ namespace KSPGeoCaching
 
     public class GeoCache
     {
-        public GeoCacheFileData fileData;
+        public GeoCacheCollectionData fileData;
         public List<GeoCacheData> geocacheData;
     }
 
     public enum Difficulty { easy, normal, hard, insane };
-    public class GeoCacheFileData
+    public class GeoCacheCollectionData
     {
         public string id;                   // GUID
         public string name;                 // should match the file name

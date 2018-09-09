@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using ClickThroughFix;
 
 // Downloaded from the Unity Store (free): https://www.assetstore.unity3d.com/en/#!/content/18308
 
@@ -118,7 +119,7 @@ namespace KSPGeoCaching
         void OnGUI()
         {
             if (visible)
-                windowPos = GUILayout.Window(GetInstanceID() + 1, windowPos, Window, "Selection ");
+                windowPos = ClickThruBlocker.GUILayoutWindow(GetInstanceID() + 1, windowPos, Window, "Selection ");
         }
 
         void Window(int id)

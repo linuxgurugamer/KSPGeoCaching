@@ -52,7 +52,7 @@ namespace KSPGeoCaching
                 if (loadedConfigNode != null)
                 {
                     geoCache = new GeoCache();
-                    geoCache.fileData = new GeoCacheFileData();
+                    geoCache.fileData = new GeoCacheCollectionData();
 
                     loadedConfigNode.TryGetValue("id", ref geoCache.fileData.id);
                     loadedConfigNode.TryGetValue("name", ref geoCache.fileData.name);
