@@ -42,7 +42,7 @@ namespace KSPGeoCaching
         }
        
 
-        public GeoCache LoadGeocacheData(string f)
+        static public GeoCache LoadGeocacheData(string f)
         {
             GeoCache geoCache;
 
@@ -98,7 +98,7 @@ namespace KSPGeoCaching
             return null;
         }
 
-        public bool SaveGeocacheFile(GeoCache geoCache)
+        static public bool SaveGeocacheFile(GeoCache geoCache)
         {
             ConfigNode fileData = new ConfigNode();
 
