@@ -6,7 +6,7 @@ using System.Reflection;
 namespace KSPGeoCaching
 {
 
-    public class GeoCache : GameParameters.CustomParameterNode
+    public class GeoCacheOptions : GameParameters.CustomParameterNode
     {
         public override string Title { get { return "Default Settings"; } }
         public override GameParameters.GameMode GameMode { get { return GameParameters.GameMode.ANY; } }
