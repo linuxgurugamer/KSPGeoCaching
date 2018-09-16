@@ -7,14 +7,14 @@ namespace KSPGeoCaching
 {
     // All Id's will be GUIDs for uniqueness
 
-    public class GeoCache
+    public class GeoCacheCollection
     {
-        public GeoCacheCollectionData fileData;
+        public GeoCacheCollectionData geocacheCollectionData;
         public List<GeoCacheData> geocacheData;
 
-        internal GeoCache()
+        internal GeoCacheCollection()
         {
-            fileData = new GeoCacheCollectionData();
+            geocacheCollectionData = new GeoCacheCollectionData();
             geocacheData = new List<GeoCacheData>();
         }
     }
@@ -23,7 +23,7 @@ namespace KSPGeoCaching
     
     public class GeoCacheCollectionData
     {
-        public string id;                   // GUID
+        public System.Guid collectionId;                   // GUID
         public string name;                 // should match the file name
         public string title;
         public string author;
@@ -33,7 +33,7 @@ namespace KSPGeoCaching
 
         internal GeoCacheCollectionData()
         {
-            id = "";
+            collectionId = System.Guid.NewGuid();
             name = "";
             title = "";
             author = "";
@@ -59,7 +59,8 @@ namespace KSPGeoCaching
 
     public class GeoCacheData
     {
-        public string id;                   // GUID
+        public System.Guid geocachId = System.Guid.NewGuid();
+
         public string name;
         public string scienceNodeRequired; // optional, if set, then will require this science node to be unlocked for this to be found
         public bool found;
@@ -70,22 +71,29 @@ namespace KSPGeoCaching
         public double latitude;
         public double longitude;
 
+        public double visibleDistance;
+
         public string description;
         public List<Hints> hints;
+        public ProtoVessel protoVessel;
+        public Vessel vessel;
         public string nextGeocacheId;
 
         internal GeoCacheData()
         {
-            id = "";
+            geocachId = System.Guid.NewGuid();
+
             name = "";
             scienceNodeRequired = "";
             found = false;
             body = FlightGlobals.GetHomeBody();
-            latitude = 0;
-            longitude = 0;
+            latitude = FlightGlobals.ActiveVessel.latitude;
+            longitude = FlightGlobals.ActiveVessel.longitude;
             description = "";
             hints = new List<Hints>();
+            //protoVessel =new ProtoVessel(new Vessel());
             nextGeocacheId = "";
+            visibleDistance = 2500;
         }
     }
 }

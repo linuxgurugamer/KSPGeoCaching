@@ -9,12 +9,16 @@ namespace KSPGeoCaching
 {
     public class FileIO
     {
-        private const string ConfigFilePath = "GameData/KSPGeoCaching/PluginData/GeoCaches";
+        private const string GeoCacheCollectionFilePath = "GameData/KSPGeoCaching/PluginData/GeoCaches";
         //static public string dirSeperator = "\\";
         //static public string altSeperator = "/";
 
         const string GEOCACHEDATA = "GeoCacheData";
+        const string GEOCACHE_COLLECTION = "GeoCacheCollection";
         const string HINT = "Hint";
+        public const string SUFFIX = ".geocache";
+        const string PROTOVESSEL = "ProtoVessel";
+        const string TMPFILE = "tmpvessel.craft";
 
         static public string DirSeperator
         {
@@ -35,33 +39,38 @@ namespace KSPGeoCaching
         {
             get
             {
-                string s = Path.Combine(KSPUtil.ApplicationRootPath, ConfigFilePath).Replace('\\', '/');
+                string s = Path.Combine(KSPUtil.ApplicationRootPath, GeoCacheCollectionFilePath).Replace('\\', '/') + "/";
                 Log.Info("configFilePath: " + s);
                 return s;
             }
         }
-       
-
-        static public GeoCache LoadGeocacheData(string f)
+       static public string CollectionFileName(string fname)
         {
-            GeoCache geoCache;
+            return GetCacheDir + fname + SUFFIX;            
+        }
 
+        static public GeoCacheCollection LoadGeoCacheData(string f)
+        {
+            GeoCacheCollection geoCache;
+            Log.Info("LoadGeoCacheData, file:" + f);
             if (File.Exists(f))
-            {
-                ConfigNode loadedConfigNode = ConfigNode.Load(f);
-                if (loadedConfigNode != null)
                 {
-                    geoCache = new GeoCache();
-                    geoCache.fileData = new GeoCacheCollectionData();
+                    ConfigNode loadedCollectionNode = ConfigNode.Load(f);
+                if (loadedCollectionNode != null)
+                {
+                    ConfigNode loadedConfigNode = loadedCollectionNode.GetNode(GEOCACHE_COLLECTION);
+                    geoCache = new GeoCacheCollection();
+                    geoCache.geocacheCollectionData = new GeoCacheCollectionData();
 
-                    loadedConfigNode.TryGetValue("id", ref geoCache.fileData.id);
-                    loadedConfigNode.TryGetValue("name", ref geoCache.fileData.name);
-                    loadedConfigNode.TryGetValue("title", ref geoCache.fileData.title);
-                    loadedConfigNode.TryGetValue("author", ref geoCache.fileData.author);
-                    loadedConfigNode.TryGetValue("description", ref geoCache.fileData.description);
-                    loadedConfigNode.TryGetEnum<Difficulty>("difficulty", ref geoCache.fileData.difficulty, geoCache.fileData.difficulty);
+                    loadedConfigNode.TryGetValue("id", ref geoCache.geocacheCollectionData.collectionId);
+                    loadedConfigNode.TryGetValue("name", ref geoCache.geocacheCollectionData.name);
+                    loadedConfigNode.TryGetValue("title", ref geoCache.geocacheCollectionData.title);
+                    loadedConfigNode.TryGetValue("author", ref geoCache.geocacheCollectionData.author);
+                    loadedConfigNode.TryGetValue("description", ref geoCache.geocacheCollectionData.description);
+                    loadedConfigNode.TryGetEnum<Difficulty>("difficulty", ref geoCache.geocacheCollectionData.difficulty, geoCache.geocacheCollectionData.difficulty);
 
-                    geoCache.fileData.requiredMods = loadedConfigNode.GetValuesList("requiredMod");
+                    geoCache.geocacheCollectionData.requiredMods = loadedConfigNode.GetValuesList("requiredMod");
+                   
 
                     var nodes = loadedConfigNode.GetNodes(GEOCACHEDATA);
                     foreach (var node in nodes)
@@ -89,6 +98,10 @@ namespace KSPGeoCaching
                             h.TryGetValue("spawn", ref hint.spawn);
                             geocacheData.hints.Add(hint);
                         }
+                        ConfigNode protoVessel = node.GetNode(PROTOVESSEL);
+                        //geocacheData.protoVessel = new ProtoVessel(protoVessel, HighLogic.CurrentGame);
+
+                        geocacheData.protoVessel = VesselRespawn.Respawn(protoVessel);
 
                         geoCache.geocacheData.Add(geocacheData);
                     }
@@ -98,19 +111,40 @@ namespace KSPGeoCaching
             return null;
         }
 
-        static public bool SaveGeocacheFile(GeoCache geoCache)
+        static void AddDescription(string descr, ref ConfigNode node)
         {
-            ConfigNode fileData = new ConfigNode();
-
-            fileData.AddValue("id", geoCache.fileData.id);
-            fileData.AddValue("name",  geoCache.fileData.name);
-            fileData.AddValue("title",  geoCache.fileData.title);
-            fileData.AddValue("author",  geoCache.fileData.author);
-            fileData.AddValue("description",  geoCache.fileData.description);
-            fileData.AddValue("difficulty", geoCache.fileData.difficulty);
-            foreach (var s in geoCache.fileData.requiredMods)
+            int cnt = 0;
+            while (descr != "")
             {
-                fileData.AddValue("requiredMod", s);
+                int x = descr.IndexOf("\n");
+                if (x == -1)
+                    x = descr.Length;
+                var s1 = descr.Substring(0, x);
+                node.AddValue("description-" + cnt.ToString(), s1);
+                if (x < descr.Length - 1 )
+                    descr = descr.Substring(x + 1);
+                else
+                    descr = "";
+                cnt++;
+            }
+        }
+
+        static public bool SaveGeocacheFile(GeoCacheCollection geoCache)
+        {
+            ConfigNode collectionData = new ConfigNode();
+            ConfigNode fileNode = new ConfigNode();
+
+            collectionData.AddValue("id", geoCache.geocacheCollectionData.collectionId);
+            collectionData.AddValue("name",  geoCache.geocacheCollectionData.name);
+            collectionData.AddValue("title",  geoCache.geocacheCollectionData.title);
+            collectionData.AddValue("author",  geoCache.geocacheCollectionData.author);
+            //collectionData.AddValue("description",  geoCache.fileData.description);
+            AddDescription(geoCache.geocacheCollectionData.description, ref collectionData);
+
+            collectionData.AddValue("difficulty", geoCache.geocacheCollectionData.difficulty);
+            foreach (var s in geoCache.geocacheCollectionData.requiredMods)
+            {
+                collectionData.AddValue("requiredMod", s);
             }
 
             foreach (var geocacheData in geoCache.geocacheData)
@@ -124,7 +158,10 @@ namespace KSPGeoCaching
 
                 data.AddValue("latitude", geocacheData.latitude);
                 data.AddValue("longitude", geocacheData.longitude);
-                data.AddValue("description", geocacheData.description);
+
+                AddDescription(geocacheData.description, ref data);
+
+                //data.AddValue("description", geocacheData.description);
                 data.AddValue("nextGeocacheId", geocacheData.nextGeocacheId);
                 foreach (var hint in geocacheData.hints)
                 {
@@ -134,15 +171,43 @@ namespace KSPGeoCaching
                     h.AddValue("spawn",  hint.spawn);
                     data.AddNode(HINT, h);
                 }
-                fileData.AddNode(GEOCACHEDATA, data);
+                // Now save the vessel associated with this node
+                ConfigNode vesselNode = new ConfigNode();
+                geocacheData.vessel.BackupVessel().Save(vesselNode);
+                data.AddNode(PROTOVESSEL, vesselNode);
+
+                
+                collectionData.AddNode(GEOCACHEDATA, data);
             }
+            fileNode.AddNode(GEOCACHE_COLLECTION, collectionData);
+            Log.Info("Creating directory: " + GetCacheDir + GeoCacheCollectionFilePath);
+            Directory.CreateDirectory(GetCacheDir);
             try
             {
-                fileData.Save(GetCacheDir + fileData.name);
+                Log.Info("Saving to file: "+ CollectionFileName(geoCache.geocacheCollectionData.name));
+                fileNode.Save(CollectionFileName(geoCache.geocacheCollectionData.name));
                 return true;
-            } catch
-            { }
+            } catch (Exception ex)
+            {
+                Log.Error("Error saving GeoCache Collection: " + ex.Message);
+            }
             return false;
+        }
+
+
+        static internal string SaveVesselTmp(ConfigNode node)
+        {
+            try
+            {
+                Log.Info("Saving to file: " + CollectionFileName(TMPFILE));
+                node.Save(CollectionFileName(TMPFILE));
+                return CollectionFileName(TMPFILE);
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Error saving GeoCache Collection: " + ex.Message);
+            }
+            return null;
         }
     }
 }

@@ -1,0 +1,104 @@
+ship = GeoCache
+version = 1.4.3
+description = 
+type = VAB
+size = 0.200000003,0.299999237,0.471671224
+persistentId = 1556632325
+rot = 0,0,0,0
+missionFlag = Squad/Flags/default
+vesselType = Debris
+PART
+{
+	part = geocache_4294657538
+	partName = Part
+	persistentId = 3435834004
+	pos = 1.06915832E-06,15.0000048,5.14090061E-07
+	attPos = 0,0,0
+	attPos0 = 1.06915832E-06,15.0000048,5.14090061E-07
+	rot = 0.707106769,0,0,-0.707106769
+	attRot = 0.707106709,0,0,-0.707106709
+	attRot0 = 0,0,0,1
+	mir = 1,1,1
+	symMethod = Radial
+	autostrutMode = Off
+	rigidAttachment = False
+	istg = -1
+	resPri = 0
+	dstg = 0
+	sidx = -1
+	sqor = -1
+	sepI = -1
+	attm = 0
+	modCost = 0
+	modMass = 0
+	modSize = 0,0,0
+	EVENTS
+	{
+	}
+	ACTIONS
+	{
+	}
+	PARTDATA
+	{
+	}
+	MODULE
+	{
+		name = GeoCacheModule
+		isEnabled = True
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+	MODULE
+	{
+		name = ModuleCommand
+		isEnabled = True
+		hibernation = False
+		hibernateOnWarp = False
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+			MakeReferenceToggle
+			{
+				actionGroup = None
+			}
+			HibernateToggle
+			{
+				actionGroup = None
+				active = False
+			}
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}	
+	MODULE
+	{
+		name = ModuleTripLogger
+		isEnabled = True
+		stagingEnabled = True
+		EVENTS
+		{
+		}
+		ACTIONS
+		{
+		}
+		Log
+		{
+			flight = 0
+		}
+		UPGRADESAPPLIED
+		{
+		}
+	}
+}
