@@ -44,71 +44,85 @@ namespace KSPGeoCaching
                 return s;
             }
         }
-       static public string CollectionFileName(string fname)
+        static public string CollectionFileName(string fname)
         {
-            return GetCacheDir + fname + SUFFIX;            
+            return GetCacheDir + fname + SUFFIX;
         }
 
-        static public GeoCacheCollection LoadGeoCacheData(string f)
+        internal static GeoCacheCollection LoadGeoCacheDataFromConfigNode(ConfigNode loadedConfigNode)
         {
-            GeoCacheCollection geoCache;
-            Log.Info("LoadGeoCacheData, file:" + f);
-            if (File.Exists(f))
+            GeoCacheCollection geoCache = new GeoCacheCollection();
+            //geoCache.geocacheCollectionData = new GeoCacheCollectionData();
+
+            loadedConfigNode.TryGetValue("id", ref geoCache.geocacheCollectionData.collectionId);
+            loadedConfigNode.TryGetValue("name", ref geoCache.geocacheCollectionData.name);
+            loadedConfigNode.TryGetValue("title", ref geoCache.geocacheCollectionData.title);
+            loadedConfigNode.TryGetValue("author", ref geoCache.geocacheCollectionData.author);
+            loadedConfigNode.TryGetValue("description", ref geoCache.geocacheCollectionData.description);
+            loadedConfigNode.TryGetEnum<Difficulty>("difficulty", ref geoCache.geocacheCollectionData.difficulty, geoCache.geocacheCollectionData.difficulty);
+
+             geoCache.geocacheCollectionData.requiredMods = loadedConfigNode.GetValuesList("requiredMod");
+
+            ConfigNode[] nodes = loadedConfigNode.GetNodes(GEOCACHEDATA);
+            foreach (var node in nodes)
+            {
+                GeoCacheData geocacheData = new GeoCacheData();
+
+                node.TryGetValue("name", ref geocacheData.name);
+                node.TryGetValue("scienceNodeRequired", ref geocacheData.scienceNodeRequired);
+                node.TryGetValue("found", ref geocacheData.found);
+                string bodyName = "";
+                node.TryGetValue("body", ref bodyName);
+                // need to find celestial body and set geocacheData.body to it
+                foreach (var p in PSystemManager.Instance.localBodies)
+                    if (p.name == bodyName)
+                    {
+                        geocacheData.body = p;
+                        break;
+                    }
+                node.TryGetValue("latitude", ref geocacheData.latitude);
+                node.TryGetValue("longitude", ref geocacheData.longitude);
+                node.TryGetValue("description", ref geocacheData.description);
+                node.TryGetValue("nextGeocacheId", ref geocacheData.nextGeocacheId);
+                var SavedHints = node.GetNodes(HINT);
+                geocacheData.hints = new List<Hint>();
+                foreach (var h in SavedHints)
                 {
-                    ConfigNode loadedCollectionNode = ConfigNode.Load(f);
+                    Hint hint = new Hint();
+                    h.TryGetValue("distance", ref hint.distance);
+                    h.TryGetValue("hint", ref hint.hint);
+                    h.TryGetValue("spawn", ref hint.spawn);
+                    geocacheData.hints.Add(hint);
+                }
+                geocacheData.protoVessel = node.GetNode(PROTOVESSEL);
+
+                if (!GeoCacheDriver.Instance.useGeoCache)
+                    /* geocacheData.protoVessel = */
+                    VesselRespawn.Respawn(geocacheData.protoVessel);
+
+                geoCache.geocacheData.Add(geocacheData);
+            }
+            return geoCache;
+        }
+
+        static public GeoCacheCollection LoadGeoCacheData(string fname)
+        {
+            GeoCacheCollection geoCache = null;
+            Log.Info("LoadGeoCacheData, file:" + fname);
+            if (File.Exists(fname))
+            {
+                Log.Info("File exists");
+
+                ConfigNode file = ConfigNode.Load(fname);
+                ConfigNode loadedCollectionNode = file.GetNode(GEOCACHE_COLLECTION);
+
                 if (loadedCollectionNode != null)
                 {
-                    ConfigNode loadedConfigNode = loadedCollectionNode.GetNode(GEOCACHE_COLLECTION);
-                    geoCache = new GeoCacheCollection();
-                    geoCache.geocacheCollectionData = new GeoCacheCollectionData();
+                    geoCache = LoadGeoCacheDataFromConfigNode(loadedCollectionNode);
 
-                    loadedConfigNode.TryGetValue("id", ref geoCache.geocacheCollectionData.collectionId);
-                    loadedConfigNode.TryGetValue("name", ref geoCache.geocacheCollectionData.name);
-                    loadedConfigNode.TryGetValue("title", ref geoCache.geocacheCollectionData.title);
-                    loadedConfigNode.TryGetValue("author", ref geoCache.geocacheCollectionData.author);
-                    loadedConfigNode.TryGetValue("description", ref geoCache.geocacheCollectionData.description);
-                    loadedConfigNode.TryGetEnum<Difficulty>("difficulty", ref geoCache.geocacheCollectionData.difficulty, geoCache.geocacheCollectionData.difficulty);
-
-                    geoCache.geocacheCollectionData.requiredMods = loadedConfigNode.GetValuesList("requiredMod");
-                   
-
-                    var nodes = loadedConfigNode.GetNodes(GEOCACHEDATA);
-                    foreach (var node in nodes)
-                    {
-                        GeoCacheData geocacheData = new GeoCacheData();
-
-                        node.TryGetValue("name", ref geocacheData.name);
-                        node.TryGetValue("scienceNodeRequired", ref geocacheData.scienceNodeRequired);
-                        node.TryGetValue("found", ref geocacheData.found);
-                        string bodyName = "";
-                        node.TryGetValue("body", ref bodyName);
-                        // need to find celestial body and set geocacheData.body to it
-
-                        node.TryGetValue("latitude", ref geocacheData.latitude);
-                        node.TryGetValue("longitude", ref geocacheData.longitude);
-                        node.TryGetValue("description", ref geocacheData.description);
-                        node.TryGetValue("nextGeocacheId", ref geocacheData.nextGeocacheId);
-                        var SavedHints = node.GetNodes(HINT);
-                        geocacheData.hints = new List<Hints>();
-                        foreach (var h in SavedHints)
-                        {
-                            Hints hint = new Hints();
-                            h.TryGetValue("distance", ref hint.distance);
-                            h.TryGetValue("hint", ref hint.hint);
-                            h.TryGetValue("spawn", ref hint.spawn);
-                            geocacheData.hints.Add(hint);
-                        }
-                        ConfigNode protoVessel = node.GetNode(PROTOVESSEL);
-                        //geocacheData.protoVessel = new ProtoVessel(protoVessel, HighLogic.CurrentGame);
-
-                        geocacheData.protoVessel = VesselRespawn.Respawn(protoVessel);
-
-                        geoCache.geocacheData.Add(geocacheData);
-                    }
-                    return geoCache;
-                }                
+                }
             }
-            return null;
+            return geoCache;
         }
 
         static void AddDescription(string descr, ref ConfigNode node)
@@ -121,7 +135,7 @@ namespace KSPGeoCaching
                     x = descr.Length;
                 var s1 = descr.Substring(0, x);
                 node.AddValue("description-" + cnt.ToString(), s1);
-                if (x < descr.Length - 1 )
+                if (x < descr.Length - 1)
                     descr = descr.Substring(x + 1);
                 else
                     descr = "";
@@ -129,65 +143,83 @@ namespace KSPGeoCaching
             }
         }
 
-        static public bool SaveGeocacheFile(GeoCacheCollection geoCache)
+        static internal ConfigNode SaveToConfigNode(GeoCacheCollection geoCache)
         {
             ConfigNode collectionData = new ConfigNode();
             ConfigNode fileNode = new ConfigNode();
-
+            
             collectionData.AddValue("id", geoCache.geocacheCollectionData.collectionId);
-            collectionData.AddValue("name",  geoCache.geocacheCollectionData.name);
-            collectionData.AddValue("title",  geoCache.geocacheCollectionData.title);
-            collectionData.AddValue("author",  geoCache.geocacheCollectionData.author);
+            collectionData.AddValue("name", geoCache.geocacheCollectionData.name);
+            collectionData.AddValue("title", geoCache.geocacheCollectionData.title);
+            collectionData.AddValue("author", geoCache.geocacheCollectionData.author);
             //collectionData.AddValue("description",  geoCache.fileData.description);
             AddDescription(geoCache.geocacheCollectionData.description, ref collectionData);
 
             collectionData.AddValue("difficulty", geoCache.geocacheCollectionData.difficulty);
+
             foreach (var s in geoCache.geocacheCollectionData.requiredMods)
             {
                 collectionData.AddValue("requiredMod", s);
             }
-
+;
             foreach (var geocacheData in geoCache.geocacheData)
             {
-                ConfigNode data = new ConfigNode();
 
+                ConfigNode data = new ConfigNode();
+                
                 data.AddValue("name", geocacheData.name);
                 data.AddValue("scienceNodeRequired", geocacheData.scienceNodeRequired);
                 data.AddValue("found", geocacheData.found);
                 data.AddValue("body", geocacheData.body.name);
 
-                data.AddValue("latitude", geocacheData.latitude);
-                data.AddValue("longitude", geocacheData.longitude);
+
 
                 AddDescription(geocacheData.description, ref data);
-
-                //data.AddValue("description", geocacheData.description);
+                
                 data.AddValue("nextGeocacheId", geocacheData.nextGeocacheId);
                 foreach (var hint in geocacheData.hints)
                 {
                     ConfigNode h = new ConfigNode();
-                    h.AddValue("distance",  hint.distance);
-                    h.AddValue("hint",  hint.hint);
-                    h.AddValue("spawn",  hint.spawn);
+                    h.AddValue("distance", hint.distance);
+                    h.AddValue("hint", hint.hint);
+                    h.AddValue("spawn", hint.spawn);
                     data.AddNode(HINT, h);
                 }
-                // Now save the vessel associated with this node
-                ConfigNode vesselNode = new ConfigNode();
-                geocacheData.vessel.BackupVessel().Save(vesselNode);
-                data.AddNode(PROTOVESSEL, vesselNode);
 
+                // Now save the vessel associated with this node
+                if (geocacheData.CacheVessel != null)
+                {
+                    data.AddValue("latitude", geocacheData.CacheVessel.latitude);
+                    data.AddValue("longitude", geocacheData.CacheVessel.longitude);
+                    ConfigNode vesselNode = new ConfigNode();
+                    geocacheData.CacheVessel.BackupVessel().Save(vesselNode);
+                    data.AddNode(PROTOVESSEL, vesselNode);
+                } else
+                {
+                    data.AddValue("latitude", geocacheData.latitude);
+                    data.AddValue("longitude", geocacheData.longitude);
+                    data.AddNode(PROTOVESSEL, geocacheData.protoVessel);
+                }
                 
                 collectionData.AddNode(GEOCACHEDATA, data);
             }
             fileNode.AddNode(GEOCACHE_COLLECTION, collectionData);
+            return fileNode;
+        }
+
+        static public bool SaveGeocacheFile(GeoCacheCollection geoCache)
+        {
+            ConfigNode fileNode = SaveToConfigNode(geoCache);
+
             Log.Info("Creating directory: " + GetCacheDir + GeoCacheCollectionFilePath);
             Directory.CreateDirectory(GetCacheDir);
             try
             {
-                Log.Info("Saving to file: "+ CollectionFileName(geoCache.geocacheCollectionData.name));
+                Log.Info("Saving to file: " + CollectionFileName(geoCache.geocacheCollectionData.name));
                 fileNode.Save(CollectionFileName(geoCache.geocacheCollectionData.name));
                 return true;
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 Log.Error("Error saving GeoCache Collection: " + ex.Message);
             }

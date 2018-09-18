@@ -19,8 +19,8 @@ namespace KSPGeoCaching
         }
     }
 
-    public enum Difficulty { easy, normal, hard, insane };
-    
+    public enum Difficulty { Easy, Normal, Hard, Insane };
+
     public class GeoCacheCollectionData
     {
         public System.Guid collectionId;                   // GUID
@@ -38,22 +38,53 @@ namespace KSPGeoCaching
             title = "";
             author = "";
             description = "";
-            difficulty = Difficulty.normal;
+            difficulty = Difficulty.Normal;
             requiredMods = new List<string>();
+        }
+
+        public override string ToString()
+        {
+            string s = "GeoCacheCollectionData: " + collectionId + "\n" + name + "\n" + author + "\n" + description + "\n";
+            return s;
         }
     }
 
-    public class Hints
+    public enum Scale { m, Km };
+    public class Hint
     {
-        public double distance;
+        public string hintTitle;
         public string hint;
+        public double distance;
+        public Scale scale;
+        public double sort;// will be abs
         public bool spawn;
 
-        internal Hints()
+        internal Hint()
         {
-            distance = 0;
+            distance = 1;
             hint = "";
+            hintTitle = "";
+            scale = Scale.Km;
             spawn = false; // if true, spawn geocache vessel when within this distance
+        }
+        internal Hint Copy()
+        {
+            Hint newHint = new Hint();
+
+            newHint.distance = distance;
+            newHint.hint = hint;
+            newHint.hintTitle = hintTitle;
+            newHint.scale = scale;
+            newHint.spawn = spawn;
+            return newHint;
+        }
+        internal void Copy(Hint oldHint)
+        {
+            distance = oldHint.distance;
+            hint = oldHint.hint;
+            hintTitle = oldHint.hintTitle;
+            scale = oldHint.scale;
+            spawn = oldHint.spawn;
         }
     }
 
@@ -71,12 +102,10 @@ namespace KSPGeoCaching
         public double latitude;
         public double longitude;
 
-        public double visibleDistance;
-
         public string description;
-        public List<Hints> hints;
-        public ProtoVessel protoVessel;
-        public Vessel vessel;
+        public List<Hint> hints;
+        public ConfigNode protoVessel;
+        private Vessel vessel;
         public string nextGeocacheId;
 
         internal GeoCacheData()
@@ -86,14 +115,41 @@ namespace KSPGeoCaching
             name = "";
             scienceNodeRequired = "";
             found = false;
-            body = FlightGlobals.GetHomeBody();
+            vessel = null;
             latitude = FlightGlobals.ActiveVessel.latitude;
             longitude = FlightGlobals.ActiveVessel.longitude;
             description = "";
-            hints = new List<Hints>();
+            hints = new List<Hint>();
             //protoVessel =new ProtoVessel(new Vessel());
             nextGeocacheId = "";
-            visibleDistance = 2500;
+        }
+        public Vessel CacheVessel
+        {
+            get { return vessel; }
+            set
+            {
+                vessel = value;
+                body = vessel.mainBody;
+                latitude = vessel.latitude;
+                longitude = vessel.longitude;
+            }
+        }
+        public void DeleteVessel()
+        {
+            CacheVessel.GoOnRails();
+
+            foreach (Part p in CacheVessel.Parts)
+            {
+                if (p != null && p.gameObject != null)
+                    p.gameObject.SetActive(false);
+                else
+                    continue;
+            }
+
+            CacheVessel.MakeInactive();
+            CacheVessel.enabled = false;
+            CacheVessel.Unload();
+            CacheVessel = null;
         }
     }
 }

@@ -632,6 +632,7 @@ namespace KSPGeoCaching
             //Staging.beginFlight();
             StageManager.BeginFlight();
 
+            GeoCacheDriver.activeGeoCacheData.CacheVessel = spawnedVessel;
             loadingCraft = false;
         }
 
@@ -640,20 +641,6 @@ namespace KSPGeoCaching
             public static float TerrainHeight(double lat, double lon, CelestialBody body)
             {
                 return 0;
-            }
-        }
-        internal class CrewData
-        {
-            public string name = null;
-            public ProtoCrewMember.Gender? gender = null;
-            public bool addToRoster = true;
-
-            public CrewData() { }
-            public CrewData(CrewData cd)
-            {
-                name = cd.name;
-                gender = cd.gender;
-                addToRoster = cd.addToRoster;
             }
         }
 
