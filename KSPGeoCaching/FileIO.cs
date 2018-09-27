@@ -14,7 +14,7 @@ namespace KSPGeoCaching
         //static public string altSeperator = "/";
 
         const string GEOCACHEDATA = "GeoCacheData";
-        const string GEOCACHE_COLLECTION = "GeoCacheCollection";
+        internal const string GEOCACHE_COLLECTION = "GeoCacheCollection";
         const string HINT = "Hint";
         public const string SUFFIX = ".geocache";
         const string PROTOVESSEL = "ProtoVessel";
@@ -61,16 +61,23 @@ namespace KSPGeoCaching
             loadedConfigNode.TryGetValue("description", ref geoCache.geocacheCollectionData.description);
             loadedConfigNode.TryGetEnum<Difficulty>("difficulty", ref geoCache.geocacheCollectionData.difficulty, geoCache.geocacheCollectionData.difficulty);
 
-             geoCache.geocacheCollectionData.requiredMods = loadedConfigNode.GetValuesList("requiredMod");
+            Log.Info("id: " + geoCache.geocacheCollectionData.collectionId);
+            Log.Info("name: " + geoCache.geocacheCollectionData.name);
+            Log.Info("title: " + geoCache.geocacheCollectionData.title);
+
+            geoCache.geocacheCollectionData.requiredMods = loadedConfigNode.GetValuesList("requiredMod");
 
             ConfigNode[] nodes = loadedConfigNode.GetNodes(GEOCACHEDATA);
             foreach (var node in nodes)
             {
+                Log.Info("LoadGeoCacheDataFromConfigNode 2");
                 GeoCacheData geocacheData = new GeoCacheData();
 
-                node.TryGetValue("name", ref geocacheData.name);
+                node.TryGetValue("name", ref geocacheData.geoCacheName);
                 node.TryGetValue("scienceNodeRequired", ref geocacheData.scienceNodeRequired);
                 node.TryGetValue("found", ref geocacheData.found);
+
+                Log.Info("LoadGeoCacheDataFromConfigNode 2a");
                 string bodyName = "";
                 node.TryGetValue("body", ref bodyName);
                 // need to find celestial body and set geocacheData.body to it
@@ -80,12 +87,17 @@ namespace KSPGeoCaching
                         geocacheData.body = p;
                         break;
                     }
+
+                Log.Info("LoadGeoCacheDataFromConfigNode 2b");
                 node.TryGetValue("latitude", ref geocacheData.latitude);
                 node.TryGetValue("longitude", ref geocacheData.longitude);
                 node.TryGetValue("description", ref geocacheData.description);
                 node.TryGetValue("nextGeocacheId", ref geocacheData.nextGeocacheId);
+
                 var SavedHints = node.GetNodes(HINT);
                 geocacheData.hints = new List<Hint>();
+                if (SavedHints != null)
+                    Log.Info("SavedHints.Count: " + SavedHints.Count());
                 foreach (var h in SavedHints)
                 {
                     Hint hint = new Hint();
@@ -96,10 +108,9 @@ namespace KSPGeoCaching
                 }
                 geocacheData.protoVessel = node.GetNode(PROTOVESSEL);
 
-                if (!GeoCacheDriver.Instance.useGeoCache)
+                if (GeoCacheDriver.Instance != null && !GeoCacheDriver.Instance.useGeoCache)
                     /* geocacheData.protoVessel = */
                     VesselRespawn.Respawn(geocacheData.protoVessel);
-
                 geoCache.geocacheData.Add(geocacheData);
             }
             return geoCache;
@@ -167,7 +178,7 @@ namespace KSPGeoCaching
 
                 ConfigNode data = new ConfigNode();
                 
-                data.AddValue("name", geocacheData.name);
+                data.AddValue("name", geocacheData.geoCacheName);
                 data.AddValue("scienceNodeRequired", geocacheData.scienceNodeRequired);
                 data.AddValue("found", geocacheData.found);
                 data.AddValue("body", geocacheData.body.name);

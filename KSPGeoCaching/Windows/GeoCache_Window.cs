@@ -15,9 +15,18 @@ namespace KSPGeoCaching
     {
         void GeoCache_Window(int windowId)
         {
+            saveable = true;
+            curLabelStyle = labelNormal;
+            curbuttonStyle = normalButton;
+            if (activeGeoCacheData.CacheVessel == null || activeGeoCacheData.geoCacheName == "")
+            {
+                saveable = false;
+                curLabelStyle = labelRed;
+            }
+
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Name:");
-            activeGeoCacheData.name = GUILayout.TextField(activeGeoCacheData.name);
+            GUILayout.Label("Name:", curLabelStyle);
+            activeGeoCacheData.geoCacheName = GUILayout.TextField(activeGeoCacheData.geoCacheName);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
@@ -54,10 +63,18 @@ namespace KSPGeoCaching
             activeGeoCacheData.nextGeocacheId = GUILayout.TextField(activeGeoCacheData.nextGeocacheId);
             GUILayout.EndHorizontal();
 #endif
+            if (activeGeoCacheData.hints.Count == 0)
+            {
+                saveable = false;
+                curLabelStyle = labelRed;
+            }
+            else
+                curLabelStyle = labelNormal;
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Hints:");
+            GUILayout.Label("Hints:", curLabelStyle);
             Hint toDelete = null;
             scrollPos3 = GUILayout.BeginScrollView(scrollPos3, GUILayout.MinHeight(60), GUILayout.Width(300), GUILayout.MaxHeight(200));
+
             for (int g1 = 0; g1 < activeGeoCacheData.hints.Count; g1++)
             {
                 var g = activeGeoCacheData.hints[g1];
@@ -118,13 +135,23 @@ namespace KSPGeoCaching
             if (GUILayout.Button("Cancel", buttonWidth))
                 visibleGeoCache = false;
             GUILayout.FlexibleSpace();
-            if (activeGeoCacheData.CacheVessel == null || activeGeoCacheData.name == "")
+
+
+            if (!saveable)
                 GUI.enabled = false;
             if (GUILayout.Button("Save and Close", buttonWidth))
             {
                 visibleGeoCache = false;
                 if (newGeoCacheData)
+                {
+                    Part part = activeGeoCacheData.CacheVessel.Parts[0];
+                    GeoCacheModule partmod = part.FindModuleImplementing<GeoCacheModule>();
+                    Log.Info("SaveAndClose");
+                    Log.Info("part.craftID: " + part.craftID);
+                    partmod.UpdateData(activeGeoCacheData.geocacheId, GeoCacheModule.AssignStatus.assigned, activeGeoCacheCollection.geocacheCollectionData.collectionId);
+
                     activeGeoCacheCollection.geocacheData.Add(activeGeoCacheData);
+                }
             }
             GUI.enabled = true;
             GUILayout.FlexibleSpace();

@@ -13,7 +13,7 @@ namespace KSPGeoCaching
 {
 
 
-    [KSPAddon(KSPAddon.Startup.Flight, false)]
+    [KSPAddon(KSPAddon.Startup.FlightAndKSC, false)]
     partial class GeoCacheDriver : MonoBehaviour
     {
         internal static GeoCacheDriver Instance;
@@ -29,12 +29,15 @@ namespace KSPGeoCaching
         const string NORMAL_BUTTON_SML = "KSPGeoCaching/PluginData/Icons/geo-24";
 
         internal bool visibleMenu = false;
-        internal bool visibleCollection = false;
+        internal bool visibleEditCollection = false;
+        internal bool visibleActiveCollections = false;
+        internal bool visibleActiveCollectionsReadOnly = false;
         internal bool loadDialog = false;
         internal bool visibleDelete = false;
         internal bool visibleGeoCache = false;
         internal bool visibleHint = false;
         internal bool useGeoCache = false;
+        internal bool visibleTravelBug = false;
 
         const int COL_WIDTH = 725;
         const int COL_HEIGHT = 200;
@@ -44,34 +47,42 @@ namespace KSPGeoCaching
         const int MENU_HEIGHT = 100;
         const int HINT_WIDTH = 400;
         const int HINT_HEIGHT = 200;
-        Vector2 scrollPos, scrollPos2, scrollPos3;
+        const int TRAVELBUG_WIDTH = 400;
+        const int TRAVELBUG_HEIGHT = 200;
+        const int ACTIVECOLLECTIONS_WIDTH = 300;
+        const int ACTIVECOLLECTIONS_HEIGHT = 200;
+
+        Vector2 scrollPos, scrollPos2, scrollPos3, scrollPosActiveCollections;
 
         Rect collectionWinRect = new Rect((Screen.width - COL_WIDTH) / 2, (Screen.height - COL_HEIGHT) / 2, COL_WIDTH, COL_HEIGHT);
         Rect geocacheWinRect = new Rect((Screen.width - GEO_WIDTH) / 2, (Screen.height - GEO_HEIGHT) / 2, GEO_WIDTH, GEO_HEIGHT);
         Rect menuWinRect = new Rect((Screen.width - MENU_WIDTH) / 2, (Screen.height - MENU_HEIGHT) / 2, MENU_WIDTH, MENU_HEIGHT);
         Rect hintWinRect = new Rect((Screen.width - HINT_WIDTH) / 2, (Screen.height - HINT_HEIGHT) / 2, HINT_WIDTH, HINT_HEIGHT);
+        Rect travelbugWinRect = new Rect((Screen.width - TRAVELBUG_WIDTH) / 2, (Screen.height - TRAVELBUG_HEIGHT) / 2, TRAVELBUG_WIDTH, TRAVELBUG_HEIGHT);
+        Rect activeCollectionsWinRect = new Rect((Screen.width - ACTIVECOLLECTIONS_WIDTH) / 2, (Screen.height - ACTIVECOLLECTIONS_HEIGHT) / 2, ACTIVECOLLECTIONS_WIDTH, ACTIVECOLLECTIONS_HEIGHT);
 
 
         int collectionWinID;
         int geocacheWinID;
         int menuWinID;
         int hintWinID;
+        int travelbugWinID;
 
-        internal static GeoCacheCollection activeGeoCacheCollection = null;
+        internal static GeoCacheCollection activeGeoCacheCollection;
         internal static GeoCacheData activeGeoCacheData;
         internal bool newGeoCacheData;
 
 
         static Texture2D upArrow;
         static Texture2D downArrow;
-        internal GUIContent upContent;
-        internal GUIContent downContent;
+        static internal GUIContent upContent;
+        static internal GUIContent downContent;
 
         void CreateButton()
         {
             toolbarControl = gameObject.AddComponent<ToolbarControl>();
             toolbarControl.AddToAllToolbars(Toggle, Toggle,
-                ApplicationLauncher.AppScenes.FLIGHT,
+                ApplicationLauncher.AppScenes.FLIGHT | ApplicationLauncher.AppScenes.SPACECENTER,
                 MODID,
                 "geocacheButton",
                 NORMAL_BUTTON_BIG,
@@ -95,7 +106,7 @@ namespace KSPGeoCaching
             geocacheWinID = (DateTime.Now.Hour * 3600 + DateTime.Now.Minute * 60 + DateTime.Now.Second) * 1000 + DateTime.Now.Millisecond + 1;
             menuWinID = (DateTime.Now.Hour * 3600 + DateTime.Now.Minute * 60 + DateTime.Now.Second) * 1000 + DateTime.Now.Millisecond + 2;
             hintWinID = (DateTime.Now.Hour * 3600 + DateTime.Now.Minute * 60 + DateTime.Now.Second) * 1000 + DateTime.Now.Millisecond + 3;
-
+            travelbugWinID= (DateTime.Now.Hour * 3600 + DateTime.Now.Minute * 60 + DateTime.Now.Second) * 1000 + DateTime.Now.Millisecond + 4;
             GameEvents.onHideUI.Add(this.HideUI);
             GameEvents.onShowUI.Add(this.ShowUI);
             GameEvents.onGamePause.Add(this.HideUIWhenPaused);
@@ -118,6 +129,8 @@ namespace KSPGeoCaching
                     Log.Error("Unable to load down arrow");
             }
 
+            InitiatePlay();
+
         }
 
         void closeFSDialog()
@@ -137,7 +150,7 @@ namespace KSPGeoCaching
         }
         void CloseGeoCacheWindow()
         {
-            visibleCollection = false;
+            visibleEditCollection = false;
             if (fsDialog != null)
             {
                 closeFSDialog();
@@ -151,6 +164,9 @@ namespace KSPGeoCaching
             GameEvents.onShowUI.Remove(this.ShowUI);
             GameEvents.onGamePause.Remove(this.HideUIWhenPaused);
             GameEvents.onGameUnpause.Remove(this.ShowUIwhenPaused);
+
+            toolbarControl.OnDestroy();
+            Destroy(toolbarControl);
             Instance = null;
             Log.Info("OnDestroy");
         }
@@ -177,13 +193,17 @@ namespace KSPGeoCaching
             hideUIwhenPaused = false;
         }
 
-        static GUIStyle redButton = null;
+        static GUIStyle normalButton, redButton = null;
         static GUILayoutOption buttonWidth;
         static GUIStyle arrowButtonStyle = null;
-        void OnGUI()
+        static GUIStyle labelNormal, labelRed;
+        void InitializeGUIVars()
         {
             if (redButton == null)
             {
+                if (HighLogic.CurrentGame.Parameters.CustomParams<GeoCacheOptions>().useKSPskin)
+                    GUI.skin = HighLogic.Skin;
+                normalButton = new GUIStyle(GUI.skin.button);
                 redButton = new GUIStyle(GUI.skin.button);
                 redButton.normal.textColor = Color.red;
                 buttonWidth = GUILayout.Width(150);
@@ -193,7 +213,15 @@ namespace KSPGeoCaching
                 arrowButtonStyle.fixedWidth = 15;
                 arrowButtonStyle.fixedHeight = 12;
 
+                labelNormal = new GUIStyle(GUI.skin.label);
+                labelRed = new GUIStyle(GUI.skin.label);
+                labelRed.normal.textColor = Color.red;
             }
+        }
+
+        void OnGUI()
+        {
+            InitializeGUIVars();
 
             if (hideUI || hideUIwhenPaused)
                 return;
@@ -203,13 +231,20 @@ namespace KSPGeoCaching
             {
                 if (fsDialog.SelectedDirectory != "" || fsDialog.SelectedFile != "")
                 {
-                    GeoCacheDriver.activeGeoCacheCollection = FileIO.LoadGeoCacheData(fsDialog.SelectedDirectory + FileIO.DirSeperator + fsDialog.SelectedFile);
+                    Log.Info("Setting activeGeoCacheCollection FileIO.LoadGeoCacheData 1");
+                    var cache = FileIO.LoadGeoCacheData(fsDialog.SelectedDirectory + FileIO.DirSeperator + fsDialog.SelectedFile);
+                    if (!visibleActiveCollections)
+                        activeGeoCacheCollection = cache;
+                    else
+                    {
+                        if (!GeoScenario.AddCollection(cache))
+                        {
+                            // error message here, alredy in cache
+                            ScreenMessages.PostScreenMessage("Collection already loaded", 10f, ScreenMessageStyle.UPPER_CENTER);
+                        }
+                    }
                 }
                 closeFSDialog();
-                if (useGeoCache && activeGeoCacheCollection != null)
-                {
-                    InitiatePlay();
-                }
             }
             if (visibleMenu)
             {
@@ -218,7 +253,7 @@ namespace KSPGeoCaching
 
                 menuWinRect = ClickThruBlocker.GUILayoutWindow(menuWinID, menuWinRect, GeoCaching_Menu_Window, "KSP GeoCache");
             }
-            if (visibleCollection && !visibleGeoCache)
+            if (visibleEditCollection && !visibleGeoCache)
             {
                 if (HighLogic.CurrentGame.Parameters.CustomParams<GeoCacheOptions>().useKSPskin)
                     GUI.skin = HighLogic.Skin;
@@ -239,76 +274,24 @@ namespace KSPGeoCaching
                 hintWinRect.y = geocacheWinRect.y;
                 hintWinRect = ClickThruBlocker.GUILayoutWindow(hintWinID, hintWinRect, Hint_Window, "Hint");
             }
+            if (visibleTravelBug)
+            {
+                if (HighLogic.CurrentGame.Parameters.CustomParams<GeoCacheOptions>().useKSPskin)
+                    GUI.skin = HighLogic.Skin;
+
+                travelbugWinRect = ClickThruBlocker.GUILayoutWindow(travelbugWinID, travelbugWinRect, TravelBug_Window, "TravelBugs");
+            }
+
+            if (visibleActiveCollections && !visibleEditCollection)
+            {
+                if (HighLogic.CurrentGame.Parameters.CustomParams<GeoCacheOptions>().useKSPskin)
+                    GUI.skin = HighLogic.Skin;
+
+                activeCollectionsWinRect = ClickThruBlocker.GUILayoutWindow(travelbugWinID, activeCollectionsWinRect, Active_Collections_Window, "Active Collections");
+            }
         }
 
-        void GeoCaching_Menu_Window(int windowId)
-        {
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("KerbalX"))
-            {
-            }
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Load GeoCache for editing"))
-            {
-                visibleCollection = true;
-                visibleMenu = false;
-                loadDialog = true;
-            }
-            GUILayout.EndHorizontal();
-
-            if (activeGeoCacheCollection != null)
-            {
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Edit GeoCache Collection"))
-                {
-                    visibleCollection = true;
-                    visibleMenu = false;
-                }
-                GUILayout.EndHorizontal();
-            }
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Delete GeoCache Collection"))
-            {
-                visibleDelete = true;
-                visibleMenu = false;
-            }
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("New GeoCache Collection"))
-            {
-                activeGeoCacheCollection = new GeoCacheCollection();
-                visibleCollection = true;
-                visibleMenu = false;
-            }
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            if (!useGeoCache)
-            {
-                if (GUILayout.Button("Use GeoCache Collection"))
-                {
-                    activeGeoCacheCollection = new GeoCacheCollection();
-                    visibleMenu = false;
-                    useGeoCache = true;
-                    activeGeoCacheCollection = new GeoCacheCollection();
-                    StartLoadDialog();
-                }
-            }
-            else
-            {
-                if (GUILayout.Button("Unload current GeoCache Collection"))
-                {
-                    StopCoroutine(GeoCacheUpdate());
-                    activeGeoCacheCollection = null;
-                    activeGeoCacheData = null;
-                }
-            }
-            GUILayout.EndHorizontal();
-            GUI.DragWindow();
-        }
-
+        
 
         const string PluginPath = "/GameData/KSPGeoCaching/PluginData/Ships/";
         const string GeoCacheCraft = "GeoCache.craft";
@@ -318,6 +301,5 @@ namespace KSPGeoCaching
                 VesselSpawn.instance = new VesselSpawn();
             VesselSpawn.instance.StartVesselSpawn(Environment.CurrentDirectory + PluginPath + GeoCacheCraft);
         }
-
     }
 }

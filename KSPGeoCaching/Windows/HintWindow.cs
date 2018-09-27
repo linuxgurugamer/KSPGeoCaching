@@ -84,16 +84,16 @@ namespace KSPGeoCaching
             if (GUILayout.Button("Save"))
             {
                 visibleHint = false;
-                activeHint.sort = activeHint.distance;
+                activeHint.absoluteDistance = activeHint.distance;
                 if (activeHint.scale == Scale.Km)
-                    activeHint.sort *= 1000;
+                    activeHint.absoluteDistance *= 1000;
                 if (!editHint)
                     activeGeoCacheData.hints.Add(activeHint);
                 else
                 {
                     origHint.Copy(activeHint);
                 }
-                activeGeoCacheData.hints = activeGeoCacheData.hints.OrderBy(d => d.sort).ToList();
+                activeGeoCacheData.hints = activeGeoCacheData.hints.OrderBy(d => d.absoluteDistance).ToList();
                 activeHint = null;
                 origHint = null;
             }

@@ -21,49 +21,72 @@ namespace KSPGeoCaching
             fsDialog.SetSelectedDirectory(FileIO.GetCacheDir, false);
             fsDialog.startDialog();
         }
-       
-        
+
+        bool saveable;
+        GUIStyle curLabelStyle, curbuttonStyle;
         void DisplayCollectionData()
         {
+            curLabelStyle = labelNormal;
+            if (activeGeoCacheCollection.geocacheCollectionData.name == "")
+            {
+                saveable = false;
+                curLabelStyle = labelRed;
+            }
+            else saveable = true;
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Name:");
+            GUILayout.Label("Name:", curLabelStyle);
             GUILayout.FlexibleSpace();
-            activeGeoCacheCollection.geocacheCollectionData.name = GUILayout.TextField(activeGeoCacheCollection.geocacheCollectionData.name, GUILayout.Width(300));
+         
+            string s = GUILayout.TextField(activeGeoCacheCollection.geocacheCollectionData.name, GUILayout.Width(300));
+            if (!visibleActiveCollectionsReadOnly)
+                activeGeoCacheCollection.geocacheCollectionData.name = s;
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Title:");
             GUILayout.FlexibleSpace();
-            activeGeoCacheCollection.geocacheCollectionData.title = GUILayout.TextField(activeGeoCacheCollection.geocacheCollectionData.title, GUILayout.Width(300));
+            s = GUILayout.TextField(activeGeoCacheCollection.geocacheCollectionData.title, GUILayout.Width(300));
+            if (!visibleActiveCollectionsReadOnly)
+                activeGeoCacheCollection.geocacheCollectionData.title = s;
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Author:");
             GUILayout.FlexibleSpace();
-            activeGeoCacheCollection.geocacheCollectionData.author = GUILayout.TextField(activeGeoCacheCollection.geocacheCollectionData.author, GUILayout.Width(300));
+        
+            s = GUILayout.TextField(activeGeoCacheCollection.geocacheCollectionData.author, GUILayout.Width(300));
+            if (!visibleActiveCollectionsReadOnly)
+                activeGeoCacheCollection.geocacheCollectionData.author = s;
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Description:");
             GUILayout.FlexibleSpace();
-            activeGeoCacheCollection.geocacheCollectionData.description = GUILayout.TextArea(activeGeoCacheCollection.geocacheCollectionData.description, GUILayout.Height(75), GUILayout.Width(300));
+            s = GUILayout.TextArea(activeGeoCacheCollection.geocacheCollectionData.description, GUILayout.Height(75), GUILayout.Width(300));
+            if (!visibleActiveCollectionsReadOnly)
+                activeGeoCacheCollection.geocacheCollectionData.description = s;
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Difficulty: ");
             GUILayout.FlexibleSpace();
+            if (visibleActiveCollectionsReadOnly)
+                GUI.enabled = false;
             if (GUILayout.Button("<", GUILayout.Width(20)))
             {
                 if (activeGeoCacheCollection.geocacheCollectionData.difficulty > 0)
                     activeGeoCacheCollection.geocacheCollectionData.difficulty--;
             }
-
+            GUI.enabled = true;
             GUILayout.Label(activeGeoCacheCollection.geocacheCollectionData.difficulty.ToString(), GUILayout.Width(100));
+            if (visibleActiveCollectionsReadOnly)
+                GUI.enabled = false;
             if (GUILayout.Button(">", GUILayout.Width(20)))
             {
                 if (activeGeoCacheCollection.geocacheCollectionData.difficulty < Difficulty.Insane)
                     activeGeoCacheCollection.geocacheCollectionData.difficulty++;
             }
+            GUI.enabled = true;
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
@@ -72,10 +95,10 @@ namespace KSPGeoCaching
             GUILayout.Label("Required Mods:");
             GUILayout.FlexibleSpace();
             scrollPos = GUILayout.BeginScrollView(scrollPos, GUILayout.Height(60), GUILayout.Width(300));
-            foreach (var s in activeGeoCacheCollection.geocacheCollectionData.requiredMods)
+            foreach (var s1 in activeGeoCacheCollection.geocacheCollectionData.requiredMods)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(s);
+                GUILayout.Label(s1);
                 GUILayout.EndHorizontal();
             }
             GUILayout.EndScrollView();
@@ -84,21 +107,24 @@ namespace KSPGeoCaching
 
         void DisplayCollectionButtons()
         {
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Load Collection", buttonWidth))
+            if (!visibleActiveCollectionsReadOnly)
             {
-                StartLoadDialog();
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("Load Collection", buttonWidth))
+                {
+                    StartLoadDialog();
+                }
+                GUILayout.FlexibleSpace();
+                if (!saveable)
+                    GUI.enabled = false;
+                if (GUILayout.Button("Save Collection", buttonWidth))
+                {
+                    FileIO.SaveGeocacheFile(activeGeoCacheCollection);
+                }
+                GUI.enabled = true;
+                
             }
-            GUILayout.FlexibleSpace();
-            if (activeGeoCacheCollection.geocacheCollectionData.name == "")
-                GUI.enabled = false;
-            if (GUILayout.Button("Save Collection", buttonWidth))
-            {
-                FileIO.SaveGeocacheFile(activeGeoCacheCollection);
-            }
-            GUI.enabled = true;
-;
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Close", buttonWidth))
                 CloseGeoCacheWindow();
@@ -106,17 +132,20 @@ namespace KSPGeoCaching
 
             //GUILayout.EndHorizontal();
             //GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button("New GeoCache", buttonWidth))
+            //GUILayout.FlexibleSpace();
+            if (!visibleActiveCollectionsReadOnly)
             {
-                visibleGeoCache = true;
-                activeGeoCacheData = new GeoCacheData();
-                newGeoCacheData = true;
-                //LaunchEvent();
-                //StartCoroutine(WaitForSpawn());
+                if (GUILayout.Button("New GeoCache", buttonWidth))
+                {
+                    visibleGeoCache = true;
+                    activeGeoCacheData = new GeoCacheData();
+                    newGeoCacheData = true;
+                    //LaunchEvent();
+                    //StartCoroutine(WaitForSpawn());
+                }
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
             }
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
         }
 
         void DisplayCollectionCaches()
@@ -134,7 +163,7 @@ namespace KSPGeoCaching
             {
                 GeoCacheData g = activeGeoCacheCollection.geocacheData[i];
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button(g.name))
+                if (GUILayout.Button(g.geoCacheName))
                 {
                     activeGeoCacheData = g;
                     newGeoCacheData = false;
@@ -187,10 +216,12 @@ namespace KSPGeoCaching
 
         void GeoCaching_Collection_Window(int windowId)
         {
+            saveable = true;
             if (loadDialog)
             {
                 loadDialog = false;
                 // following to avoid some nullrefs 
+                Log.Info("Setting activeGeoCacheCollection to null 2");
                 activeGeoCacheCollection = new GeoCacheCollection();
                 StartLoadDialog();
             }
@@ -221,8 +252,10 @@ namespace KSPGeoCaching
             activeGeoCacheData.CacheVessel = VesselSpawn.instance.spawnedVessel;
             Part part = activeGeoCacheData.CacheVessel.Parts[0];
             GeoCacheModule partmod = part.FindModuleImplementing<GeoCacheModule>();
-            partmod.geocachId = activeGeoCacheData.geocachId;
-            partmod.collectionId = activeGeoCacheCollection.geocacheCollectionData.collectionId;
+            Log.Info("WaitForSpawn");
+            Log.Info("part.craftID: "+ part.craftID);
+            partmod.UpdateData(activeGeoCacheData.geocacheId, GeoCacheModule.AssignStatus.inprogress, activeGeoCacheCollection.geocacheCollectionData.collectionId);       
+
             //activeGeoCacheCollection.geocacheData.Add(activeGeoCacheData);
         }
 

@@ -17,9 +17,10 @@ namespace KSPGeoCaching
         Hint currentHint;
         int hintIndex;
         int cacheIndex;
-//        activeGeoCacheCollection
-//        activeGeoCacheData
+        //        activeGeoCacheCollection
+        //        activeGeoCacheData
 
+        static internal bool updateActive = false;
             
         void InitiatePlay()
         {
@@ -30,9 +31,14 @@ namespace KSPGeoCaching
         }
         IEnumerator GeoCacheUpdate()
         {
+            updateActive = true;
             while (true)
             {
-                Log.Info("GeoCacheUpdate");
+                for (int i = GeoScenario.ActiveCollections - 1; i >0; i--)
+                {
+
+                }
+               // Log.Info("GeoCacheUpdate");
                 yield return new WaitForSeconds(1f);
             }
         }
