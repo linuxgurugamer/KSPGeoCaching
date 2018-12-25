@@ -3,49 +3,78 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace KSPGeoCaching
+namespace KeoCaching
 {
-    public enum Scale { m, Km };
+    public enum Scale { m, km };
     public class Hint
     {
         System.Guid hintId;
         public string hintTitle;
         public string hint;
-        public double distance;
-        public Scale scale;
-        public double absoluteDistance;
-        public bool spawn;
+        public Vessel.Situations situations;
+
         public bool found;
+
+        double dfc;
+        public double hintDistance
+        {
+            get { return dfc; }
+            set { dfc = value; SetAbsoluteDistance(); }
+        }
+        Scale sc;
+        public KeoCaching.Scale scale
+        {
+            get { return sc; }
+            set { sc = value; SetAbsoluteDistance(); }
+        }
+
+        internal double absoluteDistance;
+        void SetAbsoluteDistance()
+        {
+            absoluteDistance = hintDistance;
+            if (scale == Scale.km)
+                absoluteDistance *= 1000;
+        }
+
 
         internal Hint()
         {
 
-            hintId = new Guid();
-            distance = 1;
+            hintId = Guid.NewGuid();
+            hintDistance = 1;
+            absoluteDistance = 1000;
             hint = "";
             hintTitle = "";
-            scale = Scale.Km;
-            spawn = false; // if true, spawn geocache vessel when within this distance
+            scale = Scale.km;
+            situations = Vessel.Situations.LANDED;
+//spawn = false; // if true, spawn keocache vessel when within this distance
             found = false;
         }
+#if true
         internal Hint Copy()
         {
             Hint newHint = new Hint();
 
-            newHint.distance = distance;
+            newHint.hintDistance = hintDistance;
             newHint.hint = hint;
             newHint.hintTitle = hintTitle;
             newHint.scale = scale;
-            newHint.spawn = spawn;
+            newHint.situations = situations;
+            newHint.absoluteDistance = absoluteDistance;
+           // newHint.spawn = spawn;
             return newHint;
         }
         internal void Copy(Hint oldHint)
         {
-            distance = oldHint.distance;
+            hintDistance = oldHint.hintDistance;
             hint = oldHint.hint;
             hintTitle = oldHint.hintTitle;
             scale = oldHint.scale;
-            spawn = oldHint.spawn;
+            situations = oldHint.situations;
+            absoluteDistance = oldHint.absoluteDistance;
+
+            //  spawn = oldHint.spawn;
         }
+#endif
     }
 }

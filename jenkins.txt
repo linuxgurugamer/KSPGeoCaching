@@ -25,13 +25,13 @@
 # 0:1.3
 
 # 1:GAMEDIR, VERSIONFILE [, GITHUBREPO ]
-1:BobsPanicBox, BobsPanicBox.version
+1:KeoCaching, KeoCaching.version
 
 # 2:PROJNAME, PROJFILE, VERSIONFILE, PLUGINSFOLDER
-2:BobsPanicBox,BobsPanicBox/BobsPanicBox.csproj,BobsPanicBox.version,GameData/BobsPanicBox/Plugins
+2:KeoCaching,KeoCaching/KeoCaching.csproj,KeoCaching.version,GameData/KeoCaching/Plugins
 
 # 3:SOURCEFILE, DESTDIR
-3:BobsPanicBox.version,GameData/BobsPanicBox
+3:KeoCaching.version,GameData/KeoCaching
 #3:LICENSE.md,GameData/KerbalHotSeat
 #3:README.md,GameData/KerbalHotSeat
 

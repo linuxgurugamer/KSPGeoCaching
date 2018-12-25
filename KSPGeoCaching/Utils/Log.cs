@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Diagnostics;
 
-namespace KSPGeoCaching
+namespace KeoCaching
 {
     public static class Log
     {
@@ -19,7 +19,7 @@ namespace KSPGeoCaching
 
         public static LEVEL level = LEVEL.INFO;
 
-        private static readonly String PREFIX = "KSPGeoCaching" + ": ";
+        private static readonly String PREFIX = "KeoCaching" + ": ";
 
         public static LEVEL GetLevel()
         {

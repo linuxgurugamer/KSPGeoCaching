@@ -1,0 +1,98 @@
+PART
+{
+	name = LGGVaultPart
+	module = Part
+	author = neistirldar
+	
+	MODEL
+	{
+		model = KeoCaching/Parts/KeoCacheVault/LGGVault
+	}
+
+	
+	rescaleFactor = 1
+
+	node_stack_top = 0.0, 0.4875, 0.0, 0.0, 1.0, 0.0, 1
+	node_stack_bottom = 0.0, -0.4875, 0.0, 0.0, -1.0, 0.0, 1
+	node_stack_side1 = -0.48, 0.0, 0.0, -1.0, 0.0, 0.0, 1
+	node_stack_side2 = 0.0, 0.0, 0.5, 0.0, 0.0, 1.0, 1
+	node_stack_side3 = 0.0, 0.0, -0.48, 0.0, 0.0, -1.0, 1
+
+	node_attach = 0.0, 0.0, -0.48, 0.0, 0.0, -1.0, 1
+	
+	TechRequired = generalConstruction
+	entryCost = 32000
+	cost = 1400
+	category = Payload
+	subcategory = 0
+	title = KeoCache Vault
+	manufacturer = Neist Air Company
+	description = KeoCache Vault.  Open for hints.  Designed to be mounted on a vessel which will be a cache
+	
+	attachRules = 1,1,1,1,1
+	
+	mass = 1.6
+	dragModelType = default
+	maximum_drag = 0.2
+	minimum_drag = 0.3
+	angularDrag = 2
+	crashTolerance = 10
+	breakingForce = 50
+	breakingTorque = 50
+	maxTemp = 900
+	fuelCrossFeed = True
+	bulkheadProfiles = size1, srf
+	tags = vault mini cache keocache
+	
+	MODULE
+	{
+		name = ModuleAnimateGeneric
+		animationName = DoorsOpen
+		startEventGUIName = Close
+		endEventGUIName = Open
+		actionGUIName = Toggle Doors
+		allowDeployLimit = true
+		revClampDirection = false
+		revClampSpeed = true
+		revClampPercent = true
+	}
+	MODULE
+	{
+		name = ModuleCargoBay
+		DeployModuleIndex = 0
+		closedPosition = 0
+		lookupRadius = 1
+		partTypeName = Cargo bay
+	}
+	MODULE
+	{
+		name = ModulePartVariants
+		baseVariant = NoShelf
+		VARIANT
+		{
+			name = NoShelf
+			displayName = Plain vault
+			primaryColor = #c2bf50
+			secondaryColor = #50c253
+			sizeGroup = GroupB
+			GAMEOBJECTS
+			{
+				Body_NoShelf = true
+				Body_Shelf = false
+			}
+		}
+		VARIANT
+		{
+			name = Shelf
+			displayName = Vault with shelf
+			primaryColor = #c2bf50
+			secondaryColor = #50c253
+			sizeGroup = GroupB
+			GAMEOBJECTS
+			{
+				Body_NoShelf = false
+				Body_Shelf = true
+			}
+		}
+	}
+}

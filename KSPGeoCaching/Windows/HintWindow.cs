@@ -1,19 +1,11 @@
 ﻿using System;
-using System.IO;
-using System.Text.RegularExpressions;
-using KSP.UI.Screens;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-using ToolbarControl_NS;
-using ClickThroughFix;
 
-
-namespace KSPGeoCaching
+namespace KeoCaching
 {
-    partial class GeoCacheDriver : MonoBehaviour
+    partial class KeoCacheDriver : MonoBehaviour
     {
         internal Hint activeHint;
         internal Hint origHint;
@@ -22,6 +14,45 @@ namespace KSPGeoCaching
         bool m = false;
         float max;
         bool oldKm, oldM;
+
+        void ShowGetProximity(string obj, ref double distance, ref double absoluteDistance, ref KeoCaching.Scale scale )
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(obj + "proximity distance:");
+
+            double.TryParse(GUILayout.TextField(distance.ToString(), GUILayout.Width(100)), out distance);
+
+            oldKm = scale == Scale.km;
+            oldM = scale == Scale.m;
+            GUILayout.FlexibleSpace();
+            km = GUILayout.Toggle(oldKm, "km");
+            GUILayout.FlexibleSpace();
+            m = GUILayout.Toggle(oldM, "m");
+            GUILayout.FlexibleSpace();
+
+            GUILayout.EndHorizontal();
+
+            if (km && !oldKm)
+            {
+                scale = Scale.km;
+            }
+            if (m && !oldM)
+            {
+                scale = Scale.m;
+            }
+            if (km)
+                max = 1000;
+            if (m)
+                max = 10000;
+
+            GUILayout.BeginHorizontal();
+            distance = (float)Math.Floor(GUILayout.HorizontalSlider((float)distance, 1f, max));
+            
+            GUILayout.EndHorizontal();
+            absoluteDistance = distance;
+            if (scale == Scale.km)
+                absoluteDistance *= 1000;
+        }
 
         internal void Hint_Window(int i)
         {
@@ -32,71 +63,76 @@ namespace KSPGeoCaching
             GUILayout.BeginVertical();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Title:");
+            SetBackground(activeHint.hintTitle.Length == 0);
+            GUILayout.Label("Title:");  //, activeHint.hintTitle.Length == 0? labelRed:labelNormal);
             activeHint.hintTitle = GUILayout.TextField(activeHint.hintTitle);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Hint: ");
+            GUILayout.Label("Hint: "); //, activeHint.hint.Length == 0?labelRed:labelNormal);
+            SetBackground(activeHint.hint.Length == 0);
             activeHint.hint = GUILayout.TextArea(activeHint.hint, GUILayout.Height(75), GUILayout.Width(300));
+            SetBackground(false);
             GUILayout.EndHorizontal();
+#if false
+                public enum Situations
+        {
+            LANDED = 1,
+            SPLASHED = 2,
+            PRELAUNCH = 4,
+            FLYING = 8,
+            SUB_ORBITAL = 16,
+            ORBITING = 32,
+            ESCAPING = 64,
+            DOCKED = 128
+        }
+#endif
+            bool landed = ((int)(Vessel.Situations.LANDED & activeHint.situations))>0;
+            bool splashed = ((int)(Vessel.Situations.SPLASHED & activeHint.situations)) > 0; 
+            bool flying = ((int)(Vessel.Situations.FLYING & activeHint.situations)) > 0; 
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Proximity distance:");
+            landed = GUILayout.Toggle(landed, "Landed");
+            GUILayout.FlexibleSpace();
+            splashed = GUILayout.Toggle(splashed, "Splashed");
+            GUILayout.FlexibleSpace();
+            flying = GUILayout.Toggle(flying, "Flying");
 
-            try
-            {
-                activeHint.distance = Int32.Parse(GUILayout.TextField(activeHint.distance.ToString(), GUILayout.Width(100)));
-            }
-            catch { }
-
-            oldKm = activeHint.scale == Scale.Km;
-            oldM = activeHint.scale == Scale.m;
-            GUILayout.FlexibleSpace();
-            km = GUILayout.Toggle(oldKm, "Km");
-            GUILayout.FlexibleSpace();
-            m = GUILayout.Toggle(oldM, "M");
-            GUILayout.FlexibleSpace();
+            activeHint.situations = 0;
+            if (landed)
+                activeHint.situations += (int)Vessel.Situations.LANDED;
+            if (splashed)
+                activeHint.situations += (int)Vessel.Situations.SPLASHED;
+            if (flying)
+                activeHint.situations += (int)Vessel.Situations.FLYING;
 
             GUILayout.EndHorizontal();
-
-
-
-            if (km && !oldKm)
-            {
-                activeHint.scale = Scale.Km;
-            }
-            if (m && !oldM)
-            {
-                activeHint.scale = Scale.m;
-            }
-            if (km)
-                max = 1000;
-            if (m)
-                max = 10000;
-            GUILayout.BeginHorizontal();
-
-            activeHint.distance = (float)Math.Floor(GUILayout.HorizontalSlider((float)activeHint.distance, 1f, max));
-
-            GUILayout.EndHorizontal();
+            double d = 0;
+            Scale sc = 0;
+            ShowGetProximity("Hint", ref d, ref activeHint.absoluteDistance, ref sc);
+            activeHint.hintDistance = d;
+            activeHint.scale = sc;
 
             GUILayout.BeginHorizontal();
+            if (activeHint.hintTitle.Length == 0 || activeHint.hint.Length == 0)
+                GUI.enabled = false;
             if (GUILayout.Button("Save"))
             {
                 visibleHint = false;
-                activeHint.absoluteDistance = activeHint.distance;
-                if (activeHint.scale == Scale.Km)
+                activeHint.absoluteDistance = activeHint.hintDistance;
+                if (activeHint.scale == Scale.km)
                     activeHint.absoluteDistance *= 1000;
                 if (!editHint)
-                    activeGeoCacheData.hints.Add(activeHint);
+                    activeKeoCacheData.hints.Add(activeHint);
                 else
                 {
                     origHint.Copy(activeHint);
                 }
-                activeGeoCacheData.hints = activeGeoCacheData.hints.OrderBy(d => d.absoluteDistance).ToList();
+                activeKeoCacheData.hints = activeKeoCacheData.hints.OrderByDescending(ad => ad.absoluteDistance).ToList();
                 activeHint = null;
                 origHint = null;
             }
+            GUI.enabled = true;
             if (GUILayout.Button("Cancel"))
             {
                 visibleHint = false;

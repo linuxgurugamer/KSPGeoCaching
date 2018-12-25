@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace KSPGeoCaching
+namespace KeoCaching
 {
     static public class Util
     {
@@ -20,7 +20,7 @@ namespace KSPGeoCaching
 
             string gsLatDeg = Math.Floor(Math.Abs(latitude)).ToString();
             double min = (Math.Abs(latitude) - Math.Floor(Math.Abs(latitude))) * 60.0f;
-            if (HighLogic.CurrentGame.Parameters.CustomParams<GeoCacheOptions>().useDecimalMinutes)
+            if (HighLogic.CurrentGame.Parameters.CustomParams<KeoCacheOptions>().useDecimalMinutes)
             {
                 gsLatMin = ((Math.Abs(latitude) - Math.Floor(Math.Abs(latitude))) * 60.0f).ToString("#0.0");
             }
@@ -32,7 +32,7 @@ namespace KSPGeoCaching
             }
 
             s = gsLatDeg + "° " + gsLatMin + "' ";
-            if (!HighLogic.CurrentGame.Parameters.CustomParams<GeoCacheOptions>().useDecimalMinutes)
+            if (!HighLogic.CurrentGame.Parameters.CustomParams<KeoCacheOptions>().useDecimalMinutes)
             {
                 s += gsLatSec + "\"";
             }
@@ -55,7 +55,7 @@ namespace KSPGeoCaching
             string gsLonMin = "", gsLonSec = "";
             string gsLonDeg = Math.Floor(Math.Abs(longitude)).ToString();
             double min = (Math.Abs(longitude) - Math.Floor(Math.Abs(longitude))) * 60.0f;
-            if (HighLogic.CurrentGame.Parameters.CustomParams<GeoCacheOptions>().useDecimalMinutes)
+            if (HighLogic.CurrentGame.Parameters.CustomParams<KeoCacheOptions>().useDecimalMinutes)
             {
                 gsLonMin = ((Math.Abs(longitude) - Math.Floor(Math.Abs(longitude))) * 60.0f).ToString("#0.0");
             }
@@ -67,7 +67,7 @@ namespace KSPGeoCaching
             }
 
             s = gsLonDeg + "° " + gsLonMin + "' ";
-            if (!HighLogic.CurrentGame.Parameters.CustomParams<GeoCacheOptions>().useDecimalMinutes)
+            if (!HighLogic.CurrentGame.Parameters.CustomParams<KeoCacheOptions>().useDecimalMinutes)
             {
                 s += gsLonSec + "\"";
             }

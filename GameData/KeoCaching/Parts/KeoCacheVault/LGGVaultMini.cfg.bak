@@ -1,0 +1,60 @@
+PART
+{
+	name = LGGMiniVault
+	module = Part
+	author = neistirldar
+	
+	MODEL
+	{
+		model = KeoCaching/Parts/KeoCacheVault/MiniVault
+	}
+	
+	rescaleFactor = 1
+
+	node_attach = -0.081, 0.0, 0.0, -1, 0.0, 0.0, 1
+	
+	TechRequired = generalConstruction
+	entryCost = 32000
+	cost = 1400
+	category = Payload
+	subcategory = 0
+	title = KeoCache MiniVault
+	manufacturer = Neist Air Company
+	description = KeoCache Vault.  Open for hints.  Designed to be mounted on a vessel which will be a cache
+	
+	attachRules = 0,1,0,0,1
+	
+	mass = 1.6
+	dragModelType = default
+	maximum_drag = 0.2
+	minimum_drag = 0.3
+	angularDrag = 2
+	crashTolerance = 10
+	breakingForce = 50
+	breakingTorque = 50
+	maxTemp = 900
+	fuelCrossFeed = True
+	bulkheadProfiles = srf
+	tags = vault mini cache keocache
+	
+	MODULE
+	{
+		name = ModuleAnimateGeneric
+		animationName = DoorsOpenMini
+		startEventGUIName = Close
+		endEventGUIName = Open
+		actionGUIName = Toggle Doors
+		allowDeployLimit = true
+		revClampDirection = false
+		revClampSpeed = true
+		revClampPercent = true
+	}
+	MODULE
+	{
+		name = ModuleCargoBay
+		DeployModuleIndex = 0
+		closedPosition = 0
+		lookupRadius = 1
+		partTypeName = Cargo bay
+	}
+}

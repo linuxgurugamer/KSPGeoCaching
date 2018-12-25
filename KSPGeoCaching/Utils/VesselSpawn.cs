@@ -14,7 +14,7 @@ using KSP.UI.Screens;
 //
 // https://opensource.org/licenses/MIT
 //
-namespace KSPGeoCaching
+namespace KeoCaching
 {
     public static class VMUtils
     {
@@ -46,7 +46,10 @@ namespace KSPGeoCaching
     {
         static public ProtoVessel Respawn(ConfigNode protoVesselNode)
         {
-            ProtoVessel protoVessel﻿ = HighLogic.CurrentGame﻿.AddVessel﻿﻿(protoVesselNode);            
+            Log.Info("VesselRespawn.Respawn");
+            ProtoVessel protoVessel﻿ = HighLogic.CurrentGame﻿.AddVessel﻿﻿(protoVesselNode);
+            if (protoVessel == null)
+                Log.Info("After AddVessel, protoVessel is null");
             return protoVessel;
         }
     }
@@ -91,6 +94,7 @@ namespace KSPGeoCaching
 #endif
         public void StartVesselSpawn(string fullPath)
         {
+            Log.Info("StartVesselSpawn, fullPath: " + fullPath);
             spawnedVessel = null;
             if (FlightGlobals.ActiveVessel && FlightGlobals.ActiveVessel.LandedOrSplashed)
             {
@@ -205,7 +209,7 @@ namespace KSPGeoCaching
                     if (Input.GetMouseButtonDown(0))
                     {
                         Vector3 gpsPos = WorldPositionToGeoCoords(worldPos, FlightGlobals.currentMainBody);
-                        SpawnVesselFromCraftFile(craftUrl, gpsPos, 90, 0, crewData);
+                        SpawnVesselFromCraftFile(craftUrl, gpsPos, 0, 0, crewData);
                         break;
                     }
                 }
@@ -226,7 +230,14 @@ namespace KSPGeoCaching
 
             double lat = body.GetLatitude(worldPosition);
             double longi = body.GetLongitude(worldPosition);
+
+            var depth = TerrainHeightAt(lat, longi, body);
+            
+
             double alt = body.GetAltitude(worldPosition);
+            Log.Info("WorkdPositionToGeoCoords, alt: " + alt + ", depth: " + depth);
+            if (depth < 0)
+                alt = depth;
             return new Vector3d(lat, longi, alt);
         }
 
@@ -279,13 +290,13 @@ namespace KSPGeoCaching
         const float SpawnHeight = 1;
         private void SpawnVesselFromCraftFile(string craftURL, Vector3d gpsCoords, float heading, float pitch, List<ProtoCrewMember> crewData = null)
         {
+            Log.Info("SpawnVesselFromCraftFile");
             VesselData newData = new VesselData();
 
             newData.craftURL = craftURL;
             newData.latitude = gpsCoords.x;
             newData.longitude = gpsCoords.y;
             newData.altitude = gpsCoords.z + SpawnHeight;
-
             newData.body = FlightGlobals.currentMainBody;
             newData.heading = heading;
             newData.pitch = pitch;
@@ -300,14 +311,14 @@ namespace KSPGeoCaching
         private void SpawnVessel(VesselData vesselData, List<ProtoCrewMember> crewData = null)
         {
             string gameDataDir = KSPUtil.ApplicationRootPath;
-            Debug.Log("Spawning a vessel named '" + vesselData.name + "'");
+            Log.Info("Spawning a vessel named '" + vesselData.name + "'");
 
             // Set additional info for landed vessels
             bool landed = false;
             if (!vesselData.orbiting)
             {
                 landed = true;
-                if (vesselData.altitude == null || vesselData.altitude < 0)
+                if (vesselData.altitude == null  || (vesselData.altitude >= -1 && vesselData.altitude < 0) )
                 {
                     vesselData.altitude = SpawnHeight;//LocationUtil.TerrainHeight(vesselData.latitude, vesselData.longitude, vesselData.body);
                 }
@@ -338,7 +349,7 @@ namespace KSPGeoCaching
                 shipConstruct = ShipConstruction.LoadShip(vesselData.craftURL);
                 if (shipConstruct == null)
                 {
-                    Debug.Log("ShipConstruct was null when tried to load '" + vesselData.craftURL +
+                    Log.Info("ShipConstruct was null when tried to load '" + vesselData.craftURL +
                       "' (usually this means the file could not be found).");
                     return;//continue;
                 }
@@ -532,7 +543,7 @@ namespace KSPGeoCaching
                 }
                 else
                 {
-                    //rotation = rotation * Quaternion.FromToRotation(Vector3.up, Vector3.forward);
+                    rotation = rotation * Quaternion.FromToRotation(Vector3.up, Vector3.forward);
                     //rotation = Quaternion.FromToRotation(Vector3.up, -Vector3.up) * rotation;
 
                     //rotation = craftRotation;
@@ -629,11 +640,31 @@ namespace KSPGeoCaching
             v.GoOffRails();
             v.IgnoreGForces(240);
 
+            
             //Staging.beginFlight();
             StageManager.BeginFlight();
 
-            GeoCacheDriver.activeGeoCacheData.CacheVessel = spawnedVessel;
+            KeoCacheDriver.activeKeoCacheData.CacheVessel = spawnedVessel;
             loadingCraft = false;
+            Log.Info("PlaceSpawnedVessel: Altitude/depth: " + TerrainHeightAt(v.latitude, v.longitude, v.mainBody));
+        }
+
+        private const double PI = Math.PI;
+        // Get altitude at point. Cinically stolen from Waypoint Manager source code :D
+        internal static double TerrainHeightAt(double latitude, double longitude, CelestialBody body)
+        {
+            // Not sure when this happens - for Sun and Jool?
+            if (body.pqsController == null)
+            {
+                return 0;
+            }
+
+            // Figure out the terrain height
+            double latRads = PI / 180.0 * latitude;
+            double lonRads = PI / 180.0 * longitude;
+            Vector3d radialVector = new Vector3d(Math.Cos(latRads) * Math.Cos(lonRads), Math.Sin(latRads), Math.Cos(latRads) * Math.Sin(lonRads));
+            return body.pqsController.GetSurfaceHeight(radialVector) - body.pqsController.radius;
+            //			return Math.Max(body.pqsController.GetSurfaceHeight(radialVector) - body.pqsController.radius, 0.0);
         }
 
         public static class LocationUtil

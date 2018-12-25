@@ -7,8 +7,8 @@ rem GAMEDATA is the name of the local GameData
 rem VERSIONFILE is the name of the version file, usually the same as GAMEDATA,
 rem    but not always
 
-set H=R:\KSP_1.4.3_dev
-set GAMEDIR=KSPGeoCaching
+set H=R:\KSP-1.5.1_KeoCaching
+set GAMEDIR=KeoCaching
 set GAMEDATA="GameData"
 set VERSIONFILE=%GAMEDIR%.version
 

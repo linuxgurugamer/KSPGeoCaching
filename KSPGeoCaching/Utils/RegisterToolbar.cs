@@ -8,7 +8,7 @@ using UnityEngine;
 using KSP.UI.Screens;
 using ToolbarControl_NS;
 
-namespace KSPGeoCaching
+namespace KeoCaching
 {
     [KSPAddon(KSPAddon.Startup.MainMenu, true)]
     public class RegisterToolbar : MonoBehaviour
@@ -16,7 +16,7 @@ namespace KSPGeoCaching
         void Start()
         {
             Log.Info("RegisterToolbar.STart");
-            ToolbarControl.RegisterMod(GeoCacheDriver.MODID, GeoCacheDriver.MODNAME);
+            ToolbarControl.RegisterMod(KeoCacheDriver.MODID, KeoCacheDriver.MODNAME);
         }
     }
 }

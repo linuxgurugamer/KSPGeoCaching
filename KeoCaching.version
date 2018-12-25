@@ -1,0 +1,20 @@
+{
+  "NAME": "KeoCaching",
+  "URL": "https://raw.githubusercontent.com/linuxgurugamer/KeoCaching/master/KeoCaching.version",
+    "DOWNLOAD": "https://github.com/linuxgurugamer/KeoCaching/releases",
+  "GITHUB": {
+    "USERNAME": "linuxgurugamer",
+    "REPOSITORY": "KeoCaching"
+  },
+  "VERSION": {
+    "MAJOR": 0,
+    "MINOR": 0,
+    "PATCH": 0,
+    "BUILD": 0
+  },
+  "KSP_VERSION_MIN": {
+    "MAJOR": 1,
+    "MINOR": 5,
+    "PATCH": 1
+  }
+}

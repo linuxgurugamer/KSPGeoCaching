@@ -14,7 +14,7 @@ using System.Threading;
 #endif
 
 
-namespace KSPGeoCaching
+namespace KeoCaching
 {
     public class FileBrowser
     {
@@ -70,9 +70,12 @@ namespace KSPGeoCaching
         public FileBrowser(string directory, int layoutStyle) : this(directory, layoutStyle, new Rect(Screen.width * 0.125f, Screen.height * 0.125f, Screen.width * 0.75f, Screen.height * 0.75f)) { }
         public FileBrowser(string directory) : this(directory, 0) { }
 
-        public FileBrowser(Rect guiRect) : this() { guiSize = guiRect; }
-        public FileBrowser(int layoutStyle) : this(Directory.GetCurrentDirectory(), layoutStyle) { }
+        //public FileBrowser(Rect guiRect) : this() { guiSize = guiRect; }
+        //public FileBrowser(int layoutStyle) : this(Directory.GetCurrentDirectory(), layoutStyle) { }
         public FileBrowser() : this(Directory.GetCurrentDirectory()) { }
+
+        public FileBrowser(Rect guiRect) : this(Directory.GetCurrentDirectory(),0,guiRect) { }
+
 
         //set variables
         public void setDirectory(string dir, bool dirSel = false)
@@ -186,6 +189,7 @@ namespace KSPGeoCaching
                     GUILayout.EndVertical();
                     GUILayout.EndHorizontal();
                     break;
+#if false
                 case 1: //mobile preferred layout                   
                 default:
                     GUILayout.Space(20);
@@ -262,6 +266,7 @@ namespace KSPGeoCaching
                         return true;
                     }
                     break;
+#endif
             }
             GUILayout.EndVertical();
             GUILayout.EndArea();
